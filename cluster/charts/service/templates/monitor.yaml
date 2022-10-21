@@ -1,0 +1,37 @@
+{{- if .Values.prometheus.podMonitor.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ template "service.name" . }}
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  podMetricsEndpoints:
+  - interval: "{{ .Values.prometheus.podMonitor.interval }}"
+    port: metrics
+    path: "/metrics"
+  selector:
+    matchLabels:
+      {{- include "service.selectorLabels" . | nindent 6 }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ include "service.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  name: {{ .Release.Name }}
+spec:
+  groups:
+    - name: internal-event-operations
+      rules:
+        # - alert: eventFailure
+        #   annotations:
+        #     description: One or more interval events have failed, this could signal long running delete request or infrastructure failure of sql/docker/pubsub/elastic from service.
+        #     summary: Internal event failure for account/team deletion or queue index job.
+        #   # https://github.com/prometheus/prometheus/issues/1673#issuecomment-442365046
+        #   expr: sum(max_over_time(event_processing_completed_total{event_success="false"}[1m]) or vector(0)) - sum(max_over_time(event_processing_total{event_success="false"}[1m] offset 1m)or vector(0)) > 0
+        #   for: 0s
+        #   labels:
+        #     severity: critical
+{{- end -}}

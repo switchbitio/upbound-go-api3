@@ -1,0 +1,154 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "service.fullname" . }}-api
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.api.port }}
+      targetPort: api
+      protocol: TCP
+      name: api
+  selector:
+    {{- include "service.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "service.fullname" . }}-api-stable
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.api.port }}
+      targetPort: api
+      protocol: TCP
+      name: api
+  selector:
+    {{- include "service.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "service.fullname" . }}-api-canary
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.api.port }}
+      targetPort: api
+      protocol: TCP
+      name: api
+  selector:
+    {{- include "service.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "service.fullname" . }}-private
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.private.port }}
+      targetPort: private
+      protocol: TCP
+      name: private
+  selector:
+    {{- include "service.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "service.fullname" . }}-private-stable
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.private.port }}
+      targetPort: private
+      protocol: TCP
+      name: private
+  selector:
+    {{- include "service.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "service.fullname" . }}-private-canary
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.private.port }}
+      targetPort: private
+      protocol: TCP
+      name: private
+  selector:
+    {{- include "service.selectorLabels" . | nindent 4 }}
+---
+{{- if .Values.istio.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "service.fullname" . }}-api
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  hosts:
+    - {{ .Values.ingress.api.host }}
+    - {{ include "service.fullname" . }}-api
+    - {{ include "service.fullname" . }}-api.{{ .Release.Namespace }}.svc.cluster.local
+  gateways:
+    - {{ .Values.istio.gateway }}
+    - mesh
+  http:
+    - name: api
+      match:
+      - uri:
+          regex: /v1/(packages|packageMetadata|search|repositories|repoPermissions).*
+      route:
+        - destination:
+            host: {{ include "service.fullname" . }}-api-stable
+            port:
+              number: {{ .Values.service.api.port }}
+          weight: 100
+        - destination:
+            host: {{ include "service.fullname" . }}-api-canary
+            port:
+              number: {{ .Values.service.api.port }}
+          weight: 0
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "service.fullname" . }}-private
+  labels:
+    {{- include "service.labels" . | nindent 4 }}
+spec:
+  hosts:
+    - {{ include "service.fullname" . }}-private
+    - {{ include "service.fullname" . }}-private.{{ .Release.Namespace }}.svc.cluster.local
+  gateways:
+    - mesh
+  http:
+    - name: private
+      route:
+        - destination:
+            host: {{ include "service.fullname" . }}-private-stable
+            port:
+              number: {{ .Values.service.private.port }}
+          weight: 100
+        - destination:
+            host: {{ include "service.fullname" . }}-private-canary
+            port:
+              number: {{ .Values.service.private.port }}
+          weight: 0
+{{- end }}

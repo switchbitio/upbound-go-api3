@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: "upbound-go-api3"
+  description: "Upbound's \"Golden Path\" Go API"
+  annotations:
+    github.com/project-slug: switchbitio/upbound-go-api3
+spec:
+  type: service
+  lifecycle: experimental
+  owner: user:guest

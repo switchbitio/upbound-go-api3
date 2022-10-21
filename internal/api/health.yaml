@@ -1,0 +1,27 @@
+openapi: 3.1.0
+info:
+  title: Service health Endpoints
+  version: '1.0'
+  contact:
+    name: engineer
+    email: engineer@upbound.io
+  description: REST Endpoints for Service Health
+paths:
+  '/livez':
+    parameters: []
+    get:
+      summary: Service liveness.
+      responses:
+        '200':
+          description: OK
+      operationId: get-liveness
+      description: Indicates whether the upbound-go-api3 is currently healthy.
+  '/readyz':
+    parameters: []
+    get:
+      summary: Service readiness.
+      responses:
+        '200':
+          description: OK
+      operationId: get-readiness
+      description: Indicates whether the upbound-go-api3 is currently ready.

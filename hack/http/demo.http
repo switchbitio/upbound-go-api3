@@ -1,0 +1,5 @@
+// Demo requests
+// Grab a 🍪
+GET http://localhost:9090/cookie
+### Use the 🍪
+GET http://localhost:8081/v1/demo

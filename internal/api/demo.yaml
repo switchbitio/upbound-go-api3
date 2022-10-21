@@ -1,0 +1,18 @@
+openapi: 3.1.0
+info:
+  title: Service Entity API
+  version: '1.0'
+  contact:
+    name: Engineer
+    email: engineering@upbound.io
+  description: REST Endpoints for Demo API
+paths:
+  '/v1/demo':
+    parameters: []
+    get:
+      summary: Demo path.
+      responses:
+        '200':
+          description: OK
+      operationId: get-v1-demo
+      description: Demo path.

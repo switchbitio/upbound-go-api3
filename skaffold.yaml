@@ -1,0 +1,58 @@
+apiVersion: skaffold/v2beta24
+kind: Config
+metadata:
+  name: upbound-go-api3
+profiles:
+  - name: local
+    activation:
+      - command: dev
+    build:
+      tagPolicy:
+        gitCommit: {}
+      artifacts:
+        - image: upbound-go-api3
+          custom:
+            buildCommand: |
+              make go.build PLATFORM=linux_$HOSTARCH
+              make -C cluster/images/upbound-go-api3 img.build IMAGE=$IMAGE IMAGE_PLATFORMS=linux/$HOSTARCH
+            dependencies:
+              paths:
+                - cmd
+                - internal
+                - cluster/images/upbound-go-api3/Dockerfile
+              ignore:
+                - build
+                - .cache
+                - .github
+                - skaffold.yaml
+                - .work
+                - .vscode
+    deploy:
+      helm:
+        hooks:
+          before:
+            - host:
+                command: [
+                    "sh",
+                    "-c",
+                    "kubectl create namespace argo-rollouts --dry-run=client -o yaml | kubectl apply -f -",
+                  ]
+            - host:
+                command: [
+                  "sh",
+                  "-c",
+                  "kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/download/v1.2.0/install.yaml"
+                ]
+        releases:
+          - name: upbound-go-api3
+            chartPath: cluster/charts/upbound-go-api3
+            namespace: default
+            createNamespace: true
+            artifactOverrides:
+              image: upbound-go-api3
+            imageStrategy:
+              helm: {}
+
+build:
+  local:
+    push: false
